@@ -1,0 +1,17 @@
+Name: MonadBayes
+Version: 0.1
+Synopsis: A library for probabilistic programming in OCaml.
+Authors: Adam Scibior <adscib@gmail.com>
+License: MIT
+
+Description: An experimental port of the MonadBayes Haskell library.
+Homepage: https://github.com/adscib/monad-bayes-ocaml
+
+
+OASISFormat: 0.4
+BuildTools: ocamlbuild
+Plugins: META (0.4), DevFiles (0.4)
+
+Library "monad-bayes"
+  Path: src
+  Modules: Monad
