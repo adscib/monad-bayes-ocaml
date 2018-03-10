@@ -4,7 +4,7 @@ module type MonadPop = sig
   module Pop : MonadInfer
   type 'a m
   val lift : 'a m -> 'a Pop.t
-  val hoist : ('a m -> 'b m) -> 'a Pop.t -> 'b Pop.t
+  val hoist : (('a * float) list m -> ('b * float) list m) -> 'a Pop.t -> 'b Pop.t
   val spawn : int -> 'a Pop.t -> 'a Pop.t
   val resample : 'a Pop.t -> 'a Pop.t
 end
@@ -43,7 +43,7 @@ struct
   let score w =
     M.return [((), w)]
 
-  module Pop : MonadInfer =
+  module Pop : MonadInfer with type 'a t = 'a p =
   struct
     type 'a t = 'a p
     let return = return
