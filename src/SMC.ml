@@ -2,15 +2,6 @@ open Monad
 open Population
 open Sequential
 
-
-
-
-
-(* module type Model = sig
-  type 'a m
-  val model : 'a m
-end *)
-
 module type InferenceT = sig
  module In : MonadInfer
  module Out : MonadInfer

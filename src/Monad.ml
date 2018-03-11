@@ -16,8 +16,18 @@ module type MonadInfer = sig
   val score : float -> unit t
 end
 
-module Model (M : MonadInfer) =
+module type Model = sig
+  type 'a m
+  type output
+  val model : output m
+end
+
+module Example (M : MonadInfer) : Model
+  with type 'a m = 'a M.t with type output = bool =
 struct
+  type 'a m = 'a M.t
+  type output = bool
+
   open M
   let model =
     random >>= fun x ->
