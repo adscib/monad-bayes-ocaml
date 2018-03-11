@@ -19,3 +19,4 @@ Library "monad-bayes"
          , Weighted
          , Population
          , Sequential
+         , SMC
