@@ -2,6 +2,8 @@ module type Monad = sig
   type 'a t
   val return : 'a -> 'a t
   val (>>=) : 'a t -> ('a -> 'b t) -> 'b t
+  type nt
+  val apply : nt -> 'a t -> 'a t
 end
 
 module type MonadSample = sig

@@ -12,6 +12,10 @@ struct
     k x >>= fun (y,q) ->
     return (y, p *. q)
 
+  type nt = {f : 'a. 'a t -> 'a t}
+
+  let apply tau m = tau.f m
+
   let lift c =
     let open M in
     c >>= fun x ->

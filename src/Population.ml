@@ -3,16 +3,20 @@ open Monad
 module type MonadPop = sig
   module Pop : MonadInfer
   type 'a m
+  type h
   val lift : 'a m -> 'a Pop.t
-  val hoist : (('a * float) list m -> ('b * float) list m) -> 'a Pop.t -> 'b Pop.t
-  val spawn : int -> 'a Pop.t -> 'a Pop.t
-  val resample : 'a Pop.t -> 'a Pop.t
+  val hoist : h -> Pop.nt
+  val run : 'a Pop.t -> ('a * float) list m
+  val spawn : int -> Pop.nt
+  val resample : Pop.nt
 end
 
-module Population (M : MonadInfer) : MonadPop =
+module Population (M : MonadInfer) : MonadPop with type h = M.nt with type 'a m = 'a M.t =
 struct
 
   type 'a p = ('a * float) list M.t
+
+  type np = {f : 'a. 'a p -> 'a p}
 
   let return x = M.return [(x, 1.0)]
 
@@ -43,30 +47,38 @@ struct
   let score w =
     M.return [((), w)]
 
-  module Pop : MonadInfer with type 'a t = 'a p =
+  module Pop : MonadInfer with type 'a t = 'a p with type nt = np =
   struct
     type 'a t = 'a p
     let return = return
     let (>>=) = (>>=)
+    type nt = np
+    let apply tau m = tau.f m
     let random = random
     let score = score
   end
 
   type 'a m = 'a M.t
 
+  type h = M.nt
+
   let lift c =
     let open M in
     c >>= fun x ->
     return [(x, 1.0)]
 
-  let hoist f c = f c
+  let hoist tau = {f = fun x -> M.apply tau x}
 
-  let spawn n c =
-    let w = 1.0 /. float n in
-    let rec replicate n x = if n == 0 then [] else x :: replicate (n-1) x in
-    M.return (replicate n ((), w)) >>= fun () ->
-    c
+  let run c = c
 
-  let resample c = c
+  let spawn n =
+    { f = fun c ->
+      let w = 1.0 /. float n in
+      let rec replicate n x = if n == 0 then [] else x :: replicate (n-1) x in
+      M.return (replicate n ((), w)) >>= fun () ->
+      c
+    }
+
+  let resample = {f = fun c -> c}
 
 end
