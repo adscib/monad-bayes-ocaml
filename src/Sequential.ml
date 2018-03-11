@@ -1,10 +1,22 @@
 open Monad
 
-module Sequential (M : MonadInfer) : MonadInfer =
+module type MonadSeq = sig
+  module Seq : MonadInfer
+  type 'a m
+  type h
+  val lift : 'a m -> 'a Seq.t
+  val hoist : h -> Seq.nt
+  val advance : Seq.nt
+  val finish : 'a Seq.t -> 'a m
+end
+
+module Sequential (M : MonadInfer) : MonadSeq with type h = M.nt with type 'a m = 'a M.t =
 struct
   type ('a, 'b) either = Left of 'a | Right of 'b
   type 'a seq = Seq of ('a, unit -> 'a seq) either M.t
   let unseq (Seq c) = c
+
+  type ns = {f : 'a. 'a seq -> 'a seq}
 
   type 'a t = 'a seq
 
@@ -18,6 +30,8 @@ struct
       | Right r -> M.return (Right (fun () -> (r () >>= k)))
       )
     )
+
+  let apply tau c = tau.f c
 
   let lift c = Seq (
     let open M in
@@ -35,15 +49,32 @@ struct
     lift (M.score w) >>= fun () ->
     suspend
 
-  let hoist f c = Seq (f (unseq c))
+  module Seq : MonadInfer with type 'a t = 'a seq with type nt = ns =
+  struct
+    type 'a t = 'a seq
+    let return = return
+    let (>>=) = (>>=)
+    type nt = ns
+    let apply = apply
+    let random = random
+    let score = score
+  end
 
-  let advance c = Seq (
-    let open M in
-    unseq c >>= fun t ->
-    match t with
-    | Left x -> M.return (Left x)
-    | Right r -> unseq (r ())
-    )
+  type 'a m = 'a M.t
+  type h = M.nt
+
+  let hoist tau : ns = {f = fun c -> Seq (M.apply tau (unseq c))}
+
+  let advance =
+    {f = fun c ->
+      Seq (
+        let open M in
+        unseq c >>= fun t ->
+        match t with
+        | Left x -> M.return (Left x)
+        | Right r -> unseq (r ())
+        )
+    }
 
   let rec finish c =
     let open M in
