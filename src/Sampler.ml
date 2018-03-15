@@ -1,6 +1,6 @@
 open Monad
 
-module Sampler : MonadSample =
+module Sampler : MonadSample with type 'a t = unit -> 'a =
 struct
   type 'a t = unit -> 'a
   let return x = fun () -> x

@@ -11,7 +11,7 @@ module type MonadPop = sig
   val resample : Pop.nt
 end
 
-module Population (M : MonadInfer) : MonadPop with type h = M.nt with type 'a m = 'a M.t =
+module Population (M : MonadSample) : MonadPop with type h = M.nt with type 'a m = 'a M.t =
 struct
 
   type 'a p = ('a * float) list M.t

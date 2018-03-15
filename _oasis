@@ -12,6 +12,12 @@ OASISFormat: 0.4
 BuildTools: ocamlbuild
 Plugins: META (0.4), DevFiles (0.4)
 
+Executable "test"
+  Path: src
+  MainIs: Main.ml
+  BuildDepends:
+    monad-bayes
+
 Library "monad-bayes"
   Path: src
   Modules: Monad

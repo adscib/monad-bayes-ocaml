@@ -11,7 +11,7 @@ end
 
 type smcparam = {steps : int; particles : int}
 
-module SMC (M : MonadInfer) : InferenceT with type param = smcparam
+module SMC (M : MonadSample) : InferenceT with type param = smcparam
   with module Out = Population(M).Pop =
 struct
   module P = Population(M)
