@@ -2,16 +2,15 @@ open Monad
 open Population
 open Sequential
 
-module type InferenceT = sig
- module In : MonadInfer
- module Out : MonadInfer
- type param
- val apply : param -> 'a In.t -> 'a Out.t
-end
-
 type smcparam = {steps : int; particles : int}
 
-module SMC (M : MonadSample) : InferenceT with type param = smcparam
+module SMC (M : MonadSample) : sig
+  module In : MonadInfer
+  module Out : MonadInfer
+  type param
+  val apply : param -> 'a In.t -> 'a Out.t
+end
+  with type param = smcparam
   with module Out = Population(M).Pop =
 struct
   module P = Population(M)
