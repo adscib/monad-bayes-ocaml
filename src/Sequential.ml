@@ -1,5 +1,43 @@
 open Monad
 
+module Seq (M : MonadInfer) : MonadInfer =
+struct
+  type ('a, 'b) either = Left of 'a | Right of 'b
+  type 'a seq = Seq of ('a, unit -> 'a seq) either M.t
+  let unseq (Seq c) = c
+
+  type 'a t = 'a seq
+
+  let return x =
+    Seq (M.return (Left x))
+
+  let rec (>>=) c k = Seq (
+    M.(>>=) (unseq c) (fun t ->
+      match t with
+      | Left x -> unseq (k x)
+      | Right r -> M.return (Right (fun () -> (r () >>= k)))
+      )
+    )
+
+  let apply tau c = tau.f c
+
+  let lift c = Seq (
+    let open M in
+    c >>= fun x ->
+    return (Left x)
+    )
+
+  let random =
+    lift M.random
+
+  let suspend =
+    Seq (M.return (Right return))
+
+  let score w =
+    lift (M.score w) >>= fun () ->
+    suspend
+end
+(*
 module type MonadSeq = sig
   module Seq : MonadInfer
   type 'a m
@@ -82,4 +120,4 @@ struct
     match t with
     | Left x -> M.return x
     | Right r -> finish (r ())
-end
+end *)

@@ -1,6 +1,41 @@
 open Monad
 
-module type MonadPop = sig
+module Pop (M : MonadSample) : MonadInfer =
+struct
+  type 'a t = ('a * float) list M.t
+
+  let return x = M.return [(x, 1.0)]
+
+  let rec mapM f zs =
+    let open M in
+    match zs with
+    | [] -> return []
+    | x::xs ->
+        f x >>= fun y ->
+        mapM f xs >>= fun ys ->
+        return (y::ys)
+
+  let (>>=) c k =
+    let open M in
+    c >>= fun xs ->
+    let f (x,p) =
+      k x >>= fun ys ->
+      return (List.map (fun (y,q) -> (y, p *. q)) ys)
+    in
+    mapM f xs >>= fun yss ->
+    return (List.concat yss)
+
+  let random =
+    let open M in
+    random >>= fun x ->
+    return [(x, 1.0)]
+
+  let score w =
+    M.return [((), w)]
+
+end
+
+(* module type MonadPop = sig
   module Pop : MonadInfer
   type 'a m
   type h
@@ -81,4 +116,4 @@ struct
 
   let resample = {f = fun c -> c}
 
-end
+end *)
