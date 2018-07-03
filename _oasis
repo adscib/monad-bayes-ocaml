@@ -20,9 +20,9 @@ Executable "test"
 
 Library "monad-bayes"
   Path: src
-  Modules: Monad
-         , Sampler
-         , Weighted
-         , Population
-         , Sequential
-         , SMC
+  Modules: Numeric
+         , Distribution
+         , Monad
+  BuildDepends:
+    owl,
+    higher

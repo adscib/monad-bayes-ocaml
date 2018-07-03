@@ -1,4 +1,4 @@
-open Monad
+(* open Monad
 open Sampler
 open Population
 open SMC
@@ -44,4 +44,4 @@ let results : (bool * float) list = sampler ()
 let print_pair (b,w) = String.concat "" ["("; string_of_bool b; ", "; string_of_float w; ")"]
 let main () = print_string (String.concat " " (List.map print_pair results)) ;;
 
-main ()
+main () *)
