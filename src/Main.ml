@@ -1,6 +1,7 @@
 open Monad
 open Sampler
 open Population
+open Sequential
 open SMC
 
 module type Model = sig
@@ -34,12 +35,10 @@ struct
     return rain
 end
 
-module Alg = SMC(Sampler)
-module Mod = Sprinkler(Alg.In)
-module Out = Population(Sampler)
+module IR = Seq(Pop(Sam))
+module Prog = Sprinkler(IR)
 
-let sampler = Out.run (Alg.apply {steps = 1; particles = 3} Mod.model)
-let results : (bool * float) list = sampler ()
+let results : (bool * float) list = SMC.smc {steps = 1; particles = 3} (IR.inj Prog.model)
 
 let print_pair (b,w) = String.concat "" ["("; string_of_bool b; ", "; string_of_float w; ")"]
 let main () = print_string (String.concat " " (List.map print_pair results)) ;;

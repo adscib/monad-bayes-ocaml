@@ -1,33 +1,26 @@
 open Monad
+open Sampler
 open Population
 open Sequential
 
 type smcparam = {steps : int; particles : int}
 
-module SMC (M : MonadSample) : sig
-  module In : MonadInfer
-  module Out : MonadInfer
-  type param
-  val apply : param -> 'a In.t -> 'a Out.t
-end
-  with type param = smcparam
-  with module Out = Population(M).Pop =
+module SMCGen (M : MonadSample) =
 struct
-  module P = Population(M)
-  module S = Sequential(P.Pop)
-  module In = S.Seq
-  module Out = P.Pop
+  module P = Pop(M)
+  module S = Seq(P)
 
-  type param = smcparam
+  let smc param =
+    hoistS (P.spawn param.particles) >>
+    repeat param.steps (hoistS P.resample >> S.advance) >>
+    S.finish
+end
 
-  let rec applyN n f x =
-    if n == 0 then
-      x
-    else
-      applyN (n-1) f (f x)
+module SMC =
+struct
+  module Alg = SMCGen (Sam)
+  module P = Pop(Sam)
 
-  let apply {steps = k; particles = n} (model) =
-    S.finish (applyN k (fun x -> S.Seq.apply S.advance
-                                (S.Seq.apply (S.hoist P.resample) x))
-                       (S.Seq.apply (S.hoist (P.spawn n)) model))
+  let smc param model =
+    Sam.run (P.run (apply (Alg.smc param) model))
 end

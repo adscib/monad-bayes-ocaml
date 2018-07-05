@@ -1,30 +1,21 @@
 open Higher
 open Monad
 
-module Sampler : sig
-  type 'a sampler
-  type m
-  val inj : 'a sampler -> ('a, m) app
-  val prj : ('a, m) app -> 'a sampler
+type 'a sampler = unit -> 'a
+
+module Sampler = Newtype1(struct type 'a t = 'a sampler end)
+
+module Sam : sig
+  include MonadSample
   val run : ('a, m) app -> 'a
-end =
+end with type m = Sampler.t =
 struct
-  type 'a sampler = unit -> 'a
-
-  module S = Newtype1(struct type 'a t = 'a sampler end)
-
-  type m = S.t
-  let inj = S.inj
-  let prj = S.prj
-
-  let run s = S.prj s ()
-end
-
-
-module Sam : MonadSample =
-struct
-  type 'a t = 'a Sampler.sampler
+  type 'a t = 'a sampler
   let return x = fun () -> x
   let (>>=) s f = fun () -> f (s()) ()
+  type m = Sampler.t
+  let inj = Sampler.inj
+  let prj = Sampler.prj
   let random = fun () -> Random.float 1.0
+  let run s = Sampler.prj s ()
 end

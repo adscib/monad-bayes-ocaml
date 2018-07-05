@@ -26,3 +26,5 @@ Library "monad-bayes"
          , Population
          , Sequential
          , SMC
+  BuildDepends:
+    higher
